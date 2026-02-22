@@ -12,6 +12,6 @@ router.put('/:id', authenticate, bookmarksController.updateBookmark);
 router.delete('/:id', authenticate, bookmarksController.deleteBookmark);
 router.post('/:id/like', authenticate, bookmarksController.likeBookmark);
 router.get('/:id/comments', optionalAuth, commentsController.getCommentsByBookmark);
-router.post('/:id/comment', authenticate, commentsController.createComment);
+router.post('/:id/comments', authenticate, commentsController.createComment);
 
 export default router;
