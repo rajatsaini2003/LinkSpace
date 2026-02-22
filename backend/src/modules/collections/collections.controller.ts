@@ -18,9 +18,27 @@ export async function getCollections(req: AuthRequest, res: Response, next: Next
   }
 }
 
+export async function getMyCollections(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const collections = await collectionsService.getCollections(req.user!.userId, req.user!.userId);
+    sendSuccess(res, collections, 'My collections retrieved');
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getCollectionById(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const collection = await collectionsService.getCollectionById(req.params.id, req.user?.userId);
+    sendSuccess(res, collection, 'Collection retrieved');
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getCollectionByShareSlug(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const collection = await collectionsService.getCollectionByShareSlug(req.params.slug, req.user?.userId);
     sendSuccess(res, collection, 'Collection retrieved');
   } catch (err) {
     next(err);
@@ -74,6 +92,24 @@ export async function removeBookmarkFromCollection(req: AuthRequest, res: Respon
       req.user!.userId,
     );
     sendSuccess(res, result, 'Bookmark removed from collection');
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function cloneCollection(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const collection = await collectionsService.cloneCollection(req.params.id, req.user!.userId);
+    sendSuccess(res, collection, 'Collection saved to your library', 201);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function regenerateShareSlug(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const collection = await collectionsService.regenerateShareSlug(req.params.id, req.user!.userId);
+    sendSuccess(res, collection, 'Share link regenerated');
   } catch (err) {
     next(err);
   }

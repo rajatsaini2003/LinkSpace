@@ -14,11 +14,27 @@ export async function getBookmarks(req: AuthRequest, res: Response, next: NextFu
       page: req.query.page,
       limit: req.query.limit,
       tag: req.query.tag,
-      search: req.query.search,
+      search: req.query.search || req.query.q,
       userId: req.query.userId,
     });
     const result = await bookmarksService.getBookmarks(query, req.user?.userId);
     sendSuccess(res, result, 'Bookmarks retrieved');
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getMyBookmarks(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const query = bookmarkQuerySchema.parse({
+      page: req.query.page,
+      limit: req.query.limit,
+      tag: req.query.tag,
+      search: req.query.search,
+      userId: req.user!.userId,
+    });
+    const result = await bookmarksService.getBookmarks(query, req.user!.userId);
+    sendSuccess(res, result, 'My bookmarks retrieved');
   } catch (err) {
     next(err);
   }

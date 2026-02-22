@@ -98,6 +98,7 @@ model Collection {
   name        String
   description String?
   isPublic    Boolean  @default(true)
+  shareSlug   String   @unique @default(uuid())
   userId      String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -106,6 +107,7 @@ model Collection {
   bookmarks BookmarkCollection[]
 
   @@index([userId])
+  @@index([shareSlug])
 }
 
 model BookmarkCollection {

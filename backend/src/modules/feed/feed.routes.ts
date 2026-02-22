@@ -4,6 +4,7 @@ import { authenticate, optionalAuth } from '../../middlewares/auth.middleware';
 
 const router = Router();
 
+router.get('/', optionalAuth, feedController.getTrending);
 router.get('/trending', optionalAuth, feedController.getTrending);
 router.get('/following', authenticate, feedController.getFollowingFeed);
 

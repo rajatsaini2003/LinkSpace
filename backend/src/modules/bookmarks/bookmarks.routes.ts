@@ -6,6 +6,8 @@ import { authenticate, optionalAuth } from '../../middlewares/auth.middleware';
 const router = Router();
 
 router.get('/', optionalAuth, bookmarksController.getBookmarks);
+router.get('/me', authenticate, bookmarksController.getMyBookmarks);
+router.get('/search', optionalAuth, bookmarksController.getBookmarks);
 router.post('/', authenticate, bookmarksController.createBookmark);
 router.get('/:id', optionalAuth, bookmarksController.getBookmarkById);
 router.put('/:id', authenticate, bookmarksController.updateBookmark);
