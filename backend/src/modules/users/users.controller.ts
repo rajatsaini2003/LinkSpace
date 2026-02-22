@@ -5,6 +5,16 @@ import { sendSuccess } from '../../utils/apiResponse';
 import { AuthRequest } from '../../middlewares/auth.middleware';
 import { AppError } from '../../middlewares/error.middleware';
 
+export async function getMe(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = req.user!.userId;
+    const user = await usersService.getUserById(userId);
+    sendSuccess(res, user, 'Current user retrieved');
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getProfile(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const { username } = req.params;

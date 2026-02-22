@@ -12,6 +12,30 @@ const userPublicSelect = {
   createdAt: true,
 };
 
+export async function getUserById(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      ...userPublicSelect,
+      email: true,
+      updatedAt: true,
+      _count: {
+        select: {
+          bookmarks: true,
+          followers: true,
+          following: true,
+        },
+      },
+    },
+  });
+
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  return user;
+}
+
 export async function getUserByUsername(username: string, requesterId?: string) {
   const user = await prisma.user.findUnique({
     where: { username },

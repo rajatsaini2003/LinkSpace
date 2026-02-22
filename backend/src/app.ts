@@ -40,14 +40,14 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.use('/auth', authRoutes);
-app.use('/user', userRoutes);
-app.use('/bookmarks', bookmarkRoutes);
-app.use('/collections', collectionRoutes);
-app.use('/tags', tagRoutes);
-app.use('/comments', commentRoutes);
-app.use('/feed', feedRoutes);
-app.use('/ai', aiRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/bookmarks', bookmarkRoutes);
+app.use('/api/collections', collectionRoutes);
+app.use('/api/tags', tagRoutes);
+app.use('/api/comments', commentRoutes);
+app.use('/api/feed', feedRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.use(errorMiddleware);
 

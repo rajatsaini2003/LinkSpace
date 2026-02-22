@@ -25,6 +25,6 @@ COPY prisma/ ./prisma/
 
 RUN npx prisma generate
 
-EXPOSE 5000
+EXPOSE 3030
 
 CMD ["node", "dist/server.js"]
