@@ -1,0 +1,165 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(uuid())
+  username       String   @unique
+  email          String   @unique
+  passwordHash   String
+  displayName    String?
+  bio            String?
+  avatarUrl      String?
+  isPublic       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  bookmarks        Bookmark[]
+  collections      Collection[]
+  comments         Comment[]
+  likes            Like[]
+  refreshTokens    RefreshToken[]
+
+  followers        Follow[] @relation("Following")
+  following        Follow[] @relation("Follower")
+
+  @@index([username])
+  @@index([email])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+model Bookmark {
+  id          String   @id @default(uuid())
+  url         String
+  title       String
+  description String?
+  imageUrl    String?
+  isPublic    Boolean  @default(true)
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tags        BookmarkTag[]
+  collections BookmarkCollection[]
+  comments    Comment[]
+  likes       Like[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([isPublic])
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  bookmarks BookmarkTag[]
+
+  @@index([name])
+}
+
+model BookmarkTag {
+  bookmarkId String
+  tagId      String
+  createdAt  DateTime @default(now())
+
+  bookmark Bookmark @relation(fields: [bookmarkId], references: [id], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([bookmarkId, tagId])
+  @@index([bookmarkId])
+  @@index([tagId])
+}
+
+model Collection {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  isPublic    Boolean  @default(true)
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookmarks BookmarkCollection[]
+
+  @@index([userId])
+}
+
+model BookmarkCollection {
+  bookmarkId   String
+  collectionId String
+  addedAt      DateTime @default(now())
+
+  bookmark   Bookmark   @relation(fields: [bookmarkId], references: [id], onDelete: Cascade)
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@id([bookmarkId, collectionId])
+  @@index([bookmarkId])
+  @@index([collectionId])
+}
+
+model Comment {
+  id         String   @id @default(uuid())
+  content    String
+  userId     String
+  bookmarkId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookmark Bookmark @relation(fields: [bookmarkId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([bookmarkId])
+}
+
+model Like {
+  id         String   @id @default(uuid())
+  userId     String
+  bookmarkId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookmark Bookmark @relation(fields: [bookmarkId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookmarkId])
+  @@index([userId])
+  @@index([bookmarkId])
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
