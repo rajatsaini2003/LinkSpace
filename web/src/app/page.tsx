@@ -898,12 +898,12 @@ function CTASection() {
               and share the best of the web. It takes 30 seconds to get started.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button size="lg" asChild className="text-base px-10 h-13 rounded-full shadow-lg shadow-primary/25">
+              <Button size="lg" asChild className="text-base px-10 h-14 rounded-full shadow-lg shadow-primary/25">
                 <Link href="/signup">
                   Create Free Account <ArrowRight className="ml-2 w-4 h-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild className="text-base px-8 h-13 rounded-full">
+              <Button size="lg" variant="outline" asChild className="text-base px-8 h-14 rounded-full">
                 <Link href="/feed">
                   Explore Feed <ArrowUpRight className="ml-2 w-4 h-4" />
                 </Link>
