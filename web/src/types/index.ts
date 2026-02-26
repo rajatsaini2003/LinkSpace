@@ -79,6 +79,7 @@ export interface Bookmark {
     comments: number
   }
   isLiked: boolean
+  isSaved: boolean
 }
 
 export interface BookmarkDetail extends Bookmark {
@@ -123,6 +124,15 @@ export interface Collection {
 
 export interface CollectionDetail extends Collection {
   bookmarks: (Bookmark & { addedAt: string })[]
+}
+
+export interface CollectionWithSaveStatus {
+  id: string
+  name: string
+  description: string | null
+  isPublic: boolean
+  _count: { bookmarks: number }
+  isSaved: boolean
 }
 
 export interface CreateCollectionInput {
@@ -170,4 +180,44 @@ export interface ApiEnvelope<T> {
     total: number
     hasNextPage: boolean
   }
+}
+
+// ── Chat ──
+export interface Message {
+  id: string
+  content: string
+  conversationId: string
+  senderId: string
+  createdAt: string
+  isRead: boolean
+  sender: BookmarkUser
+}
+
+export interface Conversation {
+  id: string
+  createdAt: string
+  updatedAt: string
+  participants: BookmarkUser[]
+  lastMessage: Message | null
+  unreadCount: number
+}
+
+// ── Followers / Following ──
+export interface FollowUser {
+  id: string
+  username: string
+  displayName: string | null
+  bio: string | null
+  avatarUrl: string | null
+  isPublic: boolean
+  createdAt: string
+}
+
+export interface FollowListResponse {
+  followers?: FollowUser[]
+  following?: FollowUser[]
+  total: number
+  page: number
+  limit: number
+  hasNextPage: boolean
 }

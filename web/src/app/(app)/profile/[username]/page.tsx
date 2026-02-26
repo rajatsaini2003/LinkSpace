@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { MessageCircle, CalendarDays, MapPin } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -10,10 +11,12 @@ import { BookmarkGrid } from '@/components/bookmarks/BookmarkGrid'
 import { apiGet, apiPost } from '@/lib/api'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'sonner'
-import type { UserProfile, Bookmark } from '@/types'
+import { formatDistanceToNow } from 'date-fns'
+import type { UserProfile, Bookmark, Conversation } from '@/types'
 
 export default function ProfilePage() {
   const { username } = useParams<{ username: string }>()
+  const router = useRouter()
   const { user: me } = useAuth()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
@@ -28,7 +31,6 @@ export default function ProfilePage() {
       const p = await apiGet<UserProfile>(`/api/users/${username}`)
       setProfile(p)
       setFollowing(p.isFollowing ?? false)
-      // Fetch bookmarks with the user's id
       try {
         const res = await apiGet<{ bookmarks: Bookmark[] }>(`/api/bookmarks?userId=${p.id}`)
         setBookmarks(res.bookmarks || [])
@@ -70,6 +72,18 @@ export default function ProfilePage() {
     }
   }
 
+  const startChat = async () => {
+    if (!profile) return
+    try {
+      const conversation = await apiPost<Conversation>('/api/chat', {
+        participantId: profile.id,
+      })
+      router.push(`/chat/${conversation.id}`)
+    } catch {
+      toast.error('Failed to start conversation')
+    }
+  }
+
   if (!profile && !loading) {
     return (
       <div className="text-center py-16 text-muted-foreground">User not found</div>
@@ -87,63 +101,94 @@ export default function ProfilePage() {
   return (
     <div className="space-y-8">
       {/* Profile Card */}
-      <div className="rounded-xl border bg-card p-6">
-        {profile ? (
-          <div className="flex flex-col sm:flex-row items-start gap-5">
-            <Avatar className="w-20 h-20">
-              <AvatarImage src={profile.avatarUrl || undefined} />
-              <AvatarFallback className="text-xl">{initials}</AvatarFallback>
-            </Avatar>
+      <div className="rounded-2xl border bg-card overflow-hidden">
+        {/* Cover gradient */}
+        <div className="h-32 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent" />
 
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h1 className="text-xl font-bold">{profile.displayName || profile.username}</h1>
-                  <p className="text-sm text-muted-foreground">@{profile.username}</p>
+        <div className="p-6 -mt-12">
+          {profile ? (
+            <div className="flex flex-col sm:flex-row items-start gap-5">
+              <Avatar className="w-24 h-24 ring-4 ring-card shadow-xl">
+                <AvatarImage src={profile.avatarUrl || undefined} />
+                <AvatarFallback className="text-2xl bg-primary/10 text-primary">{initials}</AvatarFallback>
+              </Avatar>
+
+              <div className="flex-1 min-w-0 mt-2 sm:mt-8">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h1 className="text-xl font-bold">{profile.displayName || profile.username}</h1>
+                    <p className="text-sm text-muted-foreground">@{profile.username}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!isMe && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-full gap-1.5"
+                          onClick={startChat}
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          Message
+                        </Button>
+                        <Button
+                          variant={following ? 'outline' : 'default'}
+                          size="sm"
+                          className="rounded-full"
+                          onClick={toggleFollow}
+                          disabled={followLoading}
+                        >
+                          {following ? 'Following' : 'Follow'}
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
-                {!isMe && (
-                  <Button
-                    variant={following ? 'outline' : 'default'}
-                    size="sm"
-                    className="rounded-full"
-                    onClick={toggleFollow}
-                    disabled={followLoading}
-                  >
-                    {following ? 'Following' : 'Follow'}
-                  </Button>
+
+                {profile.bio && (
+                  <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{profile.bio}</p>
                 )}
-              </div>
 
-              {profile.bio && (
-                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{profile.bio}</p>
-              )}
+                <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <CalendarDays className="w-3.5 h-3.5" />
+                    Joined {formatDistanceToNow(new Date(profile.createdAt), { addSuffix: true })}
+                  </div>
+                </div>
 
-              <div className="flex items-center gap-6 mt-4 text-sm">
-                <div>
-                  <span className="font-semibold">{profile._count.bookmarks}</span>{' '}
-                  <span className="text-muted-foreground">bookmarks</span>
-                </div>
-                <div>
-                  <span className="font-semibold">{profile._count.followers}</span>{' '}
-                  <span className="text-muted-foreground">followers</span>
-                </div>
-                <div>
-                  <span className="font-semibold">{profile._count.following}</span>{' '}
-                  <span className="text-muted-foreground">following</span>
+                <div className="flex items-center gap-6 mt-4 text-sm">
+                  <div>
+                    <span className="font-semibold">{profile._count.bookmarks}</span>{' '}
+                    <span className="text-muted-foreground">bookmarks</span>
+                  </div>
+                  <Link
+                    href={`/profile/${username}/followers`}
+                    className="hover:underline transition-colors"
+                  >
+                    <span className="font-semibold">{profile._count.followers}</span>{' '}
+                    <span className="text-muted-foreground">followers</span>
+                  </Link>
+                  <Link
+                    href={`/profile/${username}/following`}
+                    className="hover:underline transition-colors"
+                  >
+                    <span className="font-semibold">{profile._count.following}</span>{' '}
+                    <span className="text-muted-foreground">following</span>
+                  </Link>
                 </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex gap-5">
-            <Skeleton className="w-20 h-20 rounded-full" />
-            <div className="space-y-2 flex-1">
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-4 w-full" />
+          ) : (
+            <div className="flex gap-5">
+              <Skeleton className="w-24 h-24 rounded-full" />
+              <div className="space-y-2 flex-1 mt-8">
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-full" />
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Bookmarks */}

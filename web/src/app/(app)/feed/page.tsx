@@ -4,9 +4,16 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { BookmarkGrid } from '@/components/bookmarks/BookmarkGrid'
 import { apiGet } from '@/lib/api'
+import { Flame, Clock, UserCheck } from 'lucide-react'
 import type { Bookmark } from '@/types'
 
 type FeedTab = 'trending' | 'latest' | 'following'
+
+const tabConfig: { value: FeedTab; label: string; icon: React.ElementType }[] = [
+  { value: 'trending', label: 'Trending', icon: Flame },
+  { value: 'latest', label: 'Latest', icon: Clock },
+  { value: 'following', label: 'Following', icon: UserCheck },
+]
 
 export default function FeedPage() {
   const [tab, setTab] = useState<FeedTab>('trending')
@@ -66,15 +73,27 @@ export default function FeedPage() {
     return () => observer.disconnect()
   }, [hasMore, loading, page, tab, fetchFeed])
 
+  const emptyMessages: Record<FeedTab, string> = {
+    trending: 'No trending bookmarks right now',
+    latest: 'No bookmarks have been shared yet',
+    following: 'Follow people to see their bookmarks here',
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Feed</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Feed</h1>
+          <p className="text-sm text-muted-foreground mt-1">Discover bookmarks from the community</p>
+        </div>
         <Tabs value={tab} onValueChange={(v) => setTab(v as FeedTab)}>
-          <TabsList>
-            <TabsTrigger value="trending">Trending</TabsTrigger>
-            <TabsTrigger value="latest">Latest</TabsTrigger>
-            <TabsTrigger value="following">Following</TabsTrigger>
+          <TabsList className="bg-muted/50">
+            {tabConfig.map((t) => (
+              <TabsTrigger key={t.value} value={t.value} className="gap-1.5 text-xs">
+                <t.icon className="w-3.5 h-3.5" />
+                {t.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </Tabs>
       </div>
@@ -82,7 +101,7 @@ export default function FeedPage() {
       <BookmarkGrid
         bookmarks={bookmarks}
         loading={loading}
-        emptyMessage={tab === 'following' ? 'Follow people to see their bookmarks' : 'No bookmarks yet'}
+        emptyMessage={emptyMessages[tab]}
       />
 
       {/* Infinite scroll trigger */}

@@ -63,12 +63,24 @@ export async function getBookmarks(query: BookmarkQueryInput, requesterId?: stri
   ]);
 
   let likedBookmarkIds = new Set<string>();
+  let savedBookmarkIds = new Set<string>();
   if (requesterId && bookmarks.length > 0) {
-    const likes = await prisma.like.findMany({
-      where: { userId: requesterId, bookmarkId: { in: bookmarks.map((b) => b.id) } },
-      select: { bookmarkId: true },
-    });
+    const [likes, saved] = await Promise.all([
+      prisma.like.findMany({
+        where: { userId: requesterId, bookmarkId: { in: bookmarks.map((b) => b.id) } },
+        select: { bookmarkId: true },
+      }),
+      prisma.bookmarkCollection.findMany({
+        where: {
+          bookmarkId: { in: bookmarks.map((b) => b.id) },
+          collection: { userId: requesterId },
+        },
+        select: { bookmarkId: true },
+        distinct: ['bookmarkId'],
+      }),
+    ]);
     likedBookmarkIds = new Set(likes.map((l) => l.bookmarkId));
+    savedBookmarkIds = new Set(saved.map((s) => s.bookmarkId));
   }
 
   return {
@@ -76,6 +88,7 @@ export async function getBookmarks(query: BookmarkQueryInput, requesterId?: stri
       ...b,
       tags: b.tags.map((bt) => bt.tag),
       isLiked: likedBookmarkIds.has(b.id),
+      isSaved: savedBookmarkIds.has(b.id),
     })),
     total,
     page,
@@ -106,17 +119,25 @@ export async function getBookmarkById(id: string, requesterId?: string) {
   }
 
   let isLiked = false;
+  let isSaved = false;
   if (requesterId) {
-    const like = await prisma.like.findUnique({
-      where: { userId_bookmarkId: { userId: requesterId, bookmarkId: id } },
-    });
+    const [like, saved] = await Promise.all([
+      prisma.like.findUnique({
+        where: { userId_bookmarkId: { userId: requesterId, bookmarkId: id } },
+      }),
+      prisma.bookmarkCollection.findFirst({
+        where: { bookmarkId: id, collection: { userId: requesterId } },
+      }),
+    ]);
     isLiked = !!like;
+    isSaved = !!saved;
   }
 
   return {
     ...bookmark,
     tags: bookmark.tags.map((bt) => bt.tag),
     isLiked,
+    isSaved,
   };
 }
 
@@ -225,4 +246,65 @@ export async function toggleLike(bookmarkId: string, userId: string) {
   await prisma.like.create({ data: { userId, bookmarkId } });
   const count = await prisma.like.count({ where: { bookmarkId } });
   return { liked: true, count };
+}
+
+export async function getBookmarkCollections(bookmarkId: string, userId: string) {
+  // Get all collections for this user, and mark which ones contain this bookmark
+  const collections = await prisma.collection.findMany({
+    where: { userId },
+    include: {
+      _count: { select: { bookmarks: true } },
+      bookmarks: {
+        where: { bookmarkId },
+        select: { bookmarkId: true },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return collections.map((col) => ({
+    id: col.id,
+    name: col.name,
+    description: col.description,
+    isPublic: col.isPublic,
+    _count: col._count,
+    isSaved: col.bookmarks.length > 0,
+  }));
+}
+
+export async function toggleBookmarkInCollection(
+  bookmarkId: string,
+  collectionId: string,
+  userId: string,
+) {
+  const collection = await prisma.collection.findUnique({ where: { id: collectionId } });
+  if (!collection) throw new AppError('Collection not found', 404);
+  if (collection.userId !== userId) throw new AppError('Forbidden', 403);
+
+  const bookmark = await prisma.bookmark.findUnique({ where: { id: bookmarkId } });
+  if (!bookmark) throw new AppError('Bookmark not found', 404);
+
+  const existing = await prisma.bookmarkCollection.findUnique({
+    where: { bookmarkId_collectionId: { bookmarkId, collectionId } },
+  });
+
+  if (existing) {
+    await prisma.bookmarkCollection.delete({
+      where: { bookmarkId_collectionId: { bookmarkId, collectionId } },
+    });
+    return { saved: false };
+  }
+
+  await prisma.bookmarkCollection.create({ data: { bookmarkId, collectionId } });
+  return { saved: true };
+}
+
+export async function isBookmarkSaved(bookmarkId: string, userId: string) {
+  const savedIn = await prisma.bookmarkCollection.findFirst({
+    where: {
+      bookmarkId,
+      collection: { userId },
+    },
+  });
+  return !!savedIn;
 }

@@ -13,6 +13,8 @@ router.get('/:id', optionalAuth, bookmarksController.getBookmarkById);
 router.put('/:id', authenticate, bookmarksController.updateBookmark);
 router.delete('/:id', authenticate, bookmarksController.deleteBookmark);
 router.post('/:id/like', authenticate, bookmarksController.likeBookmark);
+router.get('/:id/collections', authenticate, bookmarksController.getBookmarkCollections);
+router.post('/:id/toggle-collection', authenticate, bookmarksController.toggleBookmarkInCollection);
 router.get('/:id/comments', optionalAuth, commentsController.getCommentsByBookmark);
 router.post('/:id/comments', authenticate, commentsController.createComment);
 

@@ -13,6 +13,7 @@ import tagRoutes from './modules/tags/tags.routes';
 import commentRoutes from './modules/comments/comments.routes';
 import feedRoutes from './modules/feed/feed.routes';
 import aiRoutes from './modules/ai/ai.routes';
+import chatRoutes from './modules/chat/chat.routes';
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.use('/api/tags', tagRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/chat', chatRoutes);
 
 app.use(errorMiddleware);
 

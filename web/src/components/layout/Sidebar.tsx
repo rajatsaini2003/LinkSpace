@@ -9,6 +9,7 @@ import {
   FolderOpen,
   Search,
   User,
+  MessageCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
@@ -77,6 +78,18 @@ export function Sidebar() {
                 Collections
               </Link>
               <Link
+                href="/chat"
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                  pathname.startsWith('/chat')
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                )}
+              >
+                <MessageCircle className="w-4.5 h-4.5" />
+                Messages
+              </Link>
+              <Link
                 href={`/profile/${user.username}`}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
@@ -99,7 +112,10 @@ export function Sidebar() {
           {[
             ...navItems,
             ...(user
-              ? [{ href: `/profile/${user.username}`, label: 'Profile', icon: User }]
+              ? [
+                  { href: '/chat', label: 'Messages', icon: MessageCircle },
+                  { href: `/profile/${user.username}`, label: 'Profile', icon: User },
+                ]
               : []),
           ].map((item) => {
             const active = pathname === item.href || pathname.startsWith(item.href + '/')

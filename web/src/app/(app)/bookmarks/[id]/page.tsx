@@ -41,6 +41,7 @@ export default function BookmarkDetailPage() {
   const [aiSummary, setAiSummary] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
   const [showSaveModal, setShowSaveModal] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   const fetchBookmark = useCallback(async () => {
     try {
@@ -48,6 +49,7 @@ export default function BookmarkDetailPage() {
       setBookmark(bk)
       setLiked(bk.isLiked)
       setLikeCount(bk._count?.likes ?? 0)
+      setSaved(bk.isSaved ?? false)
     } catch {
       toast.error('Bookmark not found')
       router.push('/dashboard')
@@ -212,9 +214,10 @@ export default function BookmarkDetailPage() {
               variant="outline"
               size="sm"
               onClick={() => setShowSaveModal(true)}
+              className={cn(saved && 'text-primary border-primary/30')}
             >
-              <BookmarkIcon className="w-4 h-4 mr-1" />
-              Save
+              <BookmarkIcon className={cn('w-4 h-4 mr-1', saved && 'fill-current')} />
+              {saved ? 'Saved' : 'Save'}
             </Button>
             <Button variant="outline" size="sm" onClick={getSummary} disabled={aiLoading}>
               {aiLoading ? (

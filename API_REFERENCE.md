@@ -611,6 +611,181 @@ Bookmarks from followed users.
 
 ---
 
+## Chat
+
+### POST /api/chat
+
+Create or retrieve an existing 1-on-1 conversation with another user.
+
+**Headers:** `Authorization: Bearer <accessToken>`
+
+**Request:**
+
+```json
+{
+  "participantId": "uuid-of-other-user"
+}
+```
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "createdAt": "2026-02-22T...",
+    "updatedAt": "2026-02-22T...",
+    "participants": [
+      { "user": { "id": "uuid", "username": "alice", "displayName": "Alice", "avatarUrl": null }, "joinedAt": "..." },
+      { "user": { "id": "uuid", "username": "bob", "displayName": "Bob", "avatarUrl": null }, "joinedAt": "..." }
+    ]
+  }
+}
+```
+
+### GET /api/chat
+
+Get all conversations for the authenticated user. Returns conversations sorted by most recent message.
+
+**Headers:** `Authorization: Bearer <accessToken>`
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "createdAt": "...",
+      "updatedAt": "...",
+      "participants": [
+        { "user": { "id": "uuid", "username": "alice", "displayName": "Alice", "avatarUrl": null }, "joinedAt": "..." }
+      ],
+      "lastMessage": {
+        "id": "uuid",
+        "content": "Hey!",
+        "senderId": "uuid",
+        "createdAt": "..."
+      },
+      "unreadCount": 2
+    }
+  ]
+}
+```
+
+### GET /api/chat/:conversationId/messages
+
+Get paginated messages for a conversation (newest first).
+
+**Headers:** `Authorization: Bearer <accessToken>`
+
+**Query:** `?page=1&limit=50`
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "messages": [
+      {
+        "id": "uuid",
+        "content": "Hello!",
+        "conversationId": "uuid",
+        "senderId": "uuid",
+        "createdAt": "...",
+        "isRead": true,
+        "sender": { "id": "uuid", "username": "alice", "displayName": "Alice", "avatarUrl": null }
+      }
+    ],
+    "meta": { "page": 1, "limit": 50, "total": 120, "totalPages": 3 }
+  }
+}
+```
+
+### POST /api/chat/:conversationId/messages
+
+Send a message in a conversation. User must be a participant.
+
+**Headers:** `Authorization: Bearer <accessToken>`
+
+**Request:**
+
+```json
+{
+  "content": "Hello there!"
+}
+```
+
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "content": "Hello there!",
+    "conversationId": "uuid",
+    "senderId": "uuid",
+    "createdAt": "...",
+    "isRead": false,
+    "sender": { "id": "uuid", "username": "bob", "displayName": "Bob", "avatarUrl": null }
+  }
+}
+```
+
+### PUT /api/chat/:conversationId/read
+
+Mark all messages in a conversation as read.
+
+**Headers:** `Authorization: Bearer <accessToken>`
+
+**Response (200):**
+
+```json
+{ "success": true, "message": "Messages marked as read" }
+```
+
+---
+
+## Bookmark Collections
+
+### GET /api/bookmarks/:id/collections
+
+Get user's collections with a `isSaved` flag for whether the bookmark is in each collection. Used for the save-to-collection modal.
+
+**Headers:** `Authorization: Bearer <accessToken>`
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "name": "Design Inspiration",
+      "description": "Collection of design links",
+      "isPublic": true,
+      "_count": { "bookmarks": 12 },
+      "isSaved": true
+    },
+    {
+      "id": "uuid",
+      "name": "Dev Resources",
+      "description": null,
+      "isPublic": false,
+      "_count": { "bookmarks": 5 },
+      "isSaved": false
+    }
+  ]
+}
+```
+
+---
+
 ## Authentication
 
 All protected routes require:

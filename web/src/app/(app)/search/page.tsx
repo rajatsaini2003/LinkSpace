@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Search as SearchIcon } from 'lucide-react'
+import { Search as SearchIcon, X, Hash } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { BookmarkGrid } from '@/components/bookmarks/BookmarkGrid'
 import { apiGet } from '@/lib/api'
 import type { Bookmark, Tag } from '@/types'
@@ -64,32 +65,59 @@ export default function SearchPage() {
     router.push(`/search?${params}`)
   }
 
+  const clearSearch = () => {
+    setInput('')
+    router.push('/search')
+  }
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Search</h1>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Search</h1>
+        <p className="text-sm text-muted-foreground mt-1">Find bookmarks, tags, and more</p>
+      </div>
 
       <form onSubmit={handleSearch} className="relative max-w-xl">
-        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           placeholder="Search bookmarks, tags, users..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className="pl-10 h-11"
+          className="pl-11 pr-10 h-12 rounded-full bg-muted/50 text-sm"
           autoFocus
         />
+        {input && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full"
+            onClick={clearSearch}
+          >
+            <X className="w-3.5 h-3.5" />
+          </Button>
+        )}
       </form>
 
       {/* Popular tags */}
       {!query && !tagFilter && popularTags.length > 0 && (
-        <div>
-          <p className="text-sm font-medium text-muted-foreground mb-2">Popular Tags</p>
+        <div className="rounded-2xl border bg-card p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Hash className="w-4 h-4 text-primary" />
+            <p className="text-sm font-semibold">Popular Tags</p>
+          </div>
           <div className="flex flex-wrap gap-2">
             {popularTags.map((tag) => (
               <button key={tag.id} onClick={() => handleTagClick(tag.name)}>
-                <Badge variant="secondary" className="cursor-pointer hover:bg-primary/10">
+                <Badge
+                  variant="secondary"
+                  className="cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors px-3 py-1"
+                >
                   {tag.name}
                   {tag.bookmarkCount != null && (
-                    <span className="ml-1 text-muted-foreground">({tag.bookmarkCount})</span>
+                    <span className="ml-1.5 text-muted-foreground text-[10px]">
+                      {tag.bookmarkCount}
+                    </span>
                   )}
                 </Badge>
               </button>
@@ -98,14 +126,26 @@ export default function SearchPage() {
         </div>
       )}
 
+      {/* Active filter */}
+      {tagFilter && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Filtering by tag:</span>
+          <Badge variant="secondary" className="gap-1">
+            {tagFilter}
+            <button onClick={clearSearch}>
+              <X className="w-3 h-3" />
+            </button>
+          </Badge>
+        </div>
+      )}
+
       {/* Results */}
       {(query || tagFilter) && (
         <div>
-          {tagFilter && (
-            <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
-              Tag:{' '}
-              <Badge variant="secondary">{tagFilter}</Badge>
-            </div>
+          {bookmarks.length > 0 && !loading && (
+            <p className="text-xs text-muted-foreground mb-4">
+              {bookmarks.length} result{bookmarks.length !== 1 ? 's' : ''} found
+            </p>
           )}
           <BookmarkGrid bookmarks={bookmarks} loading={loading} emptyMessage="No results found" />
         </div>

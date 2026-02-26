@@ -86,3 +86,26 @@ export async function likeBookmark(req: AuthRequest, res: Response, next: NextFu
     next(err);
   }
 }
+
+export async function getBookmarkCollections(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const collections = await bookmarksService.getBookmarkCollections(req.params.id, req.user!.userId);
+    sendSuccess(res, collections, 'Bookmark collections retrieved');
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function toggleBookmarkInCollection(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { collectionId } = req.body;
+    if (!collectionId) {
+      sendSuccess(res, null, 'collectionId is required', 400);
+      return;
+    }
+    const result = await bookmarksService.toggleBookmarkInCollection(req.params.id, collectionId, req.user!.userId);
+    sendSuccess(res, result, result.saved ? 'Bookmark saved to collection' : 'Bookmark removed from collection');
+  } catch (err) {
+    next(err);
+  }
+}
