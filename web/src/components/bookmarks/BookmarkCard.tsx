@@ -1,11 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { Heart, MessageCircle, ExternalLink, Lock, Bookmark as BookmarkIcon } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Heart, MessageCircle, ExternalLink, Lock, Bookmark as BookmarkIcon, Trash2, Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
-import { apiPost } from '@/lib/api'
+import { apiPost, apiDelete } from '@/lib/api'
+import { useAuth } from '@/contexts/AuthContext'
 import { SaveToCollectionModal } from './SaveToCollectionModal'
 import type { Bookmark } from '@/types'
 import { useState } from 'react'
@@ -15,14 +17,20 @@ import { motion } from 'framer-motion'
 interface Props {
   bookmark: Bookmark
   onLikeToggle?: (id: string, liked: boolean) => void
+  onDeleted?: (id: string) => void
   showUser?: boolean
 }
 
-export function BookmarkCard({ bookmark, onLikeToggle, showUser = true }: Props) {
+export function BookmarkCard({ bookmark, onLikeToggle, onDeleted, showUser = true }: Props) {
+  const router = useRouter()
+  const { user } = useAuth()
   const [liked, setLiked] = useState(bookmark.isLiked)
   const [likeCount, setLikeCount] = useState(bookmark._count?.likes ?? 0)
   const [saved, setSaved] = useState(bookmark.isSaved ?? false)
   const [showSaveModal, setShowSaveModal] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const isOwner = bookmark.userId === user?.id
 
   const toggleLike = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -40,6 +48,19 @@ export function BookmarkCard({ bookmark, onLikeToggle, showUser = true }: Props)
     e.preventDefault()
     e.stopPropagation()
     setShowSaveModal(true)
+  }
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!confirm('Delete this bookmark? All likes, comments, and collection entries will be removed.')) return
+    setDeleting(true)
+    try {
+      await apiDelete(`/api/bookmarks/${bookmark.id}`)
+      onDeleted?.(bookmark.id)
+    } catch {
+      setDeleting(false)
+    }
   }
 
   const domain = (() => {
@@ -224,6 +245,16 @@ export function BookmarkCard({ bookmark, onLikeToggle, showUser = true }: Props)
               <BookmarkIcon className={cn('w-3.5 h-3.5 transition-transform', saved && 'fill-current')} />
               {saved ? 'Saved' : 'Save'}
             </button>
+
+            {isOwner && (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+              >
+                {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              </button>
+            )}
           </div>
         </div>
       </motion.div>

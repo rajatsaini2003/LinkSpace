@@ -160,3 +160,18 @@ export async function getConversationById(conversationId: string, userId: string
     participants: conversation.participants.map((p) => p.user),
   };
 }
+
+export async function markRead(conversationId: string, userId: string) {
+  // Verify user is a participant
+  const participant = await prisma.conversationParticipant.findUnique({
+    where: { conversationId_userId: { conversationId, userId } },
+  });
+
+  if (!participant) {
+    throw new AppError('Conversation not found', 404);
+  }
+
+  // No-op: read tracking not yet implemented in schema.
+  // This endpoint exists so the client doesn't receive a 404.
+  return;
+}

@@ -165,6 +165,7 @@ export default function DashboardPage() {
           loading={loading}
           showUser={false}
           emptyMessage="No bookmarks yet. Add your first one!"
+          onDeleted={(id) => setBookmarks((prev) => prev.filter((b) => b.id !== id))}
         />
       </div>
 

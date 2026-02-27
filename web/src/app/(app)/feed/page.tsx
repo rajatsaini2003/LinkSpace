@@ -102,6 +102,7 @@ export default function FeedPage() {
         bookmarks={bookmarks}
         loading={loading}
         emptyMessage={emptyMessages[tab]}
+        onDeleted={(id) => setBookmarks((prev) => prev.filter((b) => b.id !== id))}
       />
 
       {/* Infinite scroll trigger */}

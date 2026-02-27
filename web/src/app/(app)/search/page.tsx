@@ -147,7 +147,7 @@ export default function SearchPage() {
               {bookmarks.length} result{bookmarks.length !== 1 ? 's' : ''} found
             </p>
           )}
-          <BookmarkGrid bookmarks={bookmarks} loading={loading} emptyMessage="No results found" />
+          <BookmarkGrid bookmarks={bookmarks} loading={loading} emptyMessage="No results found" onDeleted={(id) => setBookmarks((prev) => prev.filter((b) => b.id !== id))} />
         </div>
       )}
     </div>

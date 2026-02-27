@@ -194,7 +194,7 @@ export default function ProfilePage() {
       {/* Bookmarks */}
       <div>
         <h2 className="text-lg font-semibold mb-4">Bookmarks</h2>
-        <BookmarkGrid bookmarks={bookmarks} loading={loading} showUser={false} />
+        <BookmarkGrid bookmarks={bookmarks} loading={loading} showUser={false} onDeleted={(id) => setBookmarks((prev) => prev.filter((b) => b.id !== id))} />
       </div>
     </div>
   )

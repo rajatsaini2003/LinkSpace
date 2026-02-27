@@ -9,9 +9,10 @@ interface Props {
   loading?: boolean
   emptyMessage?: string
   showUser?: boolean
+  onDeleted?: (id: string) => void
 }
 
-export function BookmarkGrid({ bookmarks, loading, emptyMessage = 'No bookmarks found', showUser }: Props) {
+export function BookmarkGrid({ bookmarks, loading, emptyMessage = 'No bookmarks found', showUser, onDeleted }: Props) {
   if (loading) {
     return (
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -38,7 +39,7 @@ export function BookmarkGrid({ bookmarks, loading, emptyMessage = 'No bookmarks 
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {bookmarks.map((bk) => (
-        <BookmarkCard key={bk.id} bookmark={bk} showUser={showUser} />
+        <BookmarkCard key={bk.id} bookmark={bk} showUser={showUser} onDeleted={onDeleted} />
       ))}
     </div>
   )

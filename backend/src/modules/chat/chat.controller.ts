@@ -54,3 +54,12 @@ export async function sendMessage(req: AuthRequest, res: Response, next: NextFun
     next(err);
   }
 }
+
+export async function markRead(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    await chatService.markRead(req.params.id, req.user!.userId);
+    sendSuccess(res, null, 'Messages marked as read');
+  } catch (err) {
+    next(err);
+  }
+}

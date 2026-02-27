@@ -265,6 +265,14 @@ Same shape as followers.
 
 ## Bookmarks
 
+### GET /api/bookmarks/me?page=1&limit=20&tag=javascript&search=react
+
+Get the authenticated user's own bookmarks (includes both public and private).
+
+**Headers:** `Authorization: Bearer <accessToken>`
+
+**Response (200):** Same shape as `GET /api/bookmarks`.
+
 ### GET /api/bookmarks?page=1&limit=20&tag=javascript&search=react&userId=uuid
 
 List bookmarks. Optional auth.
@@ -370,6 +378,8 @@ Update bookmark (owner only).
 
 ### DELETE /api/bookmarks/:id
 
+Permanently delete a bookmark. **Cascade deletes** all associated likes, comments, tag associations, and collection entries.
+
 **Headers:** `Authorization: Bearer <accessToken>`
 
 **Response (200):**
@@ -377,6 +387,8 @@ Update bookmark (owner only).
 ```json
 { "success": true, "message": "Bookmark deleted", "data": null }
 ```
+
+> **Note:** Only the bookmark owner can delete it. All related data (likes, comments, tags, collection memberships) is automatically removed.
 
 ### POST /api/bookmarks/:id/like
 
@@ -479,6 +491,66 @@ Get collection with bookmarks.
 ### DELETE /api/collections/:id
 
 **Headers:** `Authorization: Bearer <accessToken>`
+
+### GET /api/collections/me
+
+Get all collections for the authenticated user (including private).
+
+**Headers:** `Authorization: Bearer <accessToken>`
+
+**Response (200):** Same shape as `GET /api/collections`.
+
+### GET /api/collections/share/:slug
+
+Get a collection by its public share slug. Returns the collection with all bookmarks. Works without authentication for public collections.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "name": "My Collection",
+    "description": "...",
+    "isPublic": true,
+    "shareSlug": "abc123",
+    "user": { "id": "uuid", "username": "johndoe", "displayName": "John", "avatarUrl": null },
+    "_count": { "bookmarks": 5 },
+    "bookmarks": [
+      {
+        "id": "uuid",
+        "url": "https://...",
+        "title": "...",
+        "description": "...",
+        "imageUrl": "...",
+        "tags": [{ "id": "uuid", "name": "react" }],
+        "user": { ... },
+        "_count": { "likes": 3, "comments": 1 },
+        "addedAt": "2026-02-22T..."
+      }
+    ]
+  }
+}
+```
+
+### POST /api/collections/:id/clone
+
+Clone a public collection into the authenticated user's account. The cloned collection is set to private by default and includes all the same bookmarks.
+
+**Headers:** `Authorization: Bearer <accessToken>`
+
+**Response (201):** Collection object.
+
+> **Note:** You cannot clone your own collection.
+
+### POST /api/collections/:id/regenerate-slug
+
+Regenerate the share slug for a collection you own. Invalidates the old share link.
+
+**Headers:** `Authorization: Bearer <accessToken>`
+
+**Response (200):** Updated collection object with new `shareSlug`.
 
 ### POST /api/collections/:id/bookmarks
 
@@ -746,6 +818,24 @@ Mark all messages in a conversation as read.
 
 ```json
 { "success": true, "message": "Messages marked as read" }
+```
+
+### POST /api/bookmarks/:id/toggle-collection
+
+Toggle whether a bookmark is saved in a specific collection. If the bookmark is already in the collection it gets removed; otherwise it gets added.
+
+**Headers:** `Authorization: Bearer <accessToken>`
+
+**Request:**
+
+```json
+{ "collectionId": "uuid" }
+```
+
+**Response (200):**
+
+```json
+{ "success": true, "message": "Bookmark saved to collection", "data": { "saved": true } }
 ```
 
 ---
